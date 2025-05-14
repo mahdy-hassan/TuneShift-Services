@@ -1,0 +1,6 @@
+SVC33e94551|Car Wash And Detailing|car wash and detailing with some extra care and maintenance|25.00|35
+SVC3fd933ea|Regular Maintenance|regular checkups and maintenance|15.00|30
+SVCe4395d09|Engine Repair|Complete engine diagnostics and repair services|30.00|60
+SVC797271af|Electrical Systems|Battery checks and electrical system maintenance|25.00|45
+SVCf5115408|Painting and Styling|painting and detailing and adding vinyls|50.00|60
+SVC9d0fca22|Tire repair|tire repair and changing|10.00|15

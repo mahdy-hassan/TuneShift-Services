@@ -1,0 +1,2 @@
+test|Toyota Corolla|2003|ENV-7567
+test|Mitsubishi Lance IX MR edition|2006|CBR-9898
