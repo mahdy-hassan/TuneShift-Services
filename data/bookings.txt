@@ -1,3 +1,0 @@
-test|BK20250508154244|Toyota Corolla|2003|ENV-7567|SVC33e94551|Car Wash And Detailing|25.0|2025-05-10|15:42|Completed
-test|BK20250508154450|Mitsubishi Lance IX MR edition|2006|CBR-9898|SVCf5115408|Painting and Styling|50.0|2025-05-17|19:47|Pending
-test|BK20250508155927|Toyota Corolla|2003|ENV-7567|SVC797271af|Electrical Systems|25.00|07:02|2025-05-14|Pending
