@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import com.car.tuneshift.models.User;
+import com.car.tuneshift.models.Feedback;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -14,12 +15,9 @@ import java.util.Date;
 
 @WebServlet("/FeedbackServlet")
 public class FeedbackServlet extends HttpServlet {
-    private static final String FEEDBACK_FILE = "C:\\Users\\Dell\\Desktop\\tuneshift\\data\\feedback.txt";
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("user");
         
@@ -28,45 +26,50 @@ public class FeedbackServlet extends HttpServlet {
             return;
         }
 
-        String rating = request.getParameter("rating");
-        String feedback = request.getParameter("feedback");
-        
-        if (rating == null || feedback == null || feedback.trim().isEmpty()) {
-            session.setAttribute("errorMessage", "Please provide both rating and feedback.");
-            response.sendRedirect(request.getContextPath() + "/pages/profile.jsp");
+        String feedbackMessage = request.getParameter("feedback");
+        String ratingString = request.getParameter("rating");
+
+        if (feedbackMessage == null || feedbackMessage.trim().isEmpty() || ratingString == null || ratingString.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/pages/profile.jsp?section=feedback&error=Feedback cannot be empty");
             return;
         }
 
-        // Create feedback directory if it doesn't exist
-        File feedbackDir = new File("C:\\Users\\Dell\\Desktop\\tuneshift\\data");
-        if (!feedbackDir.exists()) {
-            feedbackDir.mkdirs();
+        int rating = 0;
+        try {
+            rating = Integer.parseInt(ratingString);
+            if (rating < 1 || rating > 5) {
+                response.sendRedirect(request.getContextPath() + "/pages/profile.jsp?section=feedback&error=Invalid rating value");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/pages/profile.jsp?section=feedback&error=Invalid rating format");
+            return;
         }
 
-        // Format the current date
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm");
-        String currentDate = dateFormat.format(new Date());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date now = new Date();
+        String dateString = formatter.format(now);
 
-        // Prepare feedback data
-        String feedbackData = String.format("%s|%s|%s|%s%n", 
-            user.getUsername(), 
-            rating, 
-            feedback.replace("|", " "), // Replace pipe character to avoid conflicts
-            currentDate
-        );
+        Feedback feedback = new Feedback(user.getUsername(), feedbackMessage, dateString, rating);
 
-        // Append feedback to file
-        try (FileWriter fw = new FileWriter(FEEDBACK_FILE, true);
-             BufferedWriter bw = new BufferedWriter(fw);
-             PrintWriter out = new PrintWriter(bw)) {
-            out.print(feedbackData);
+        // Using an absolute path to ensure writing to the correct data folder
+        String dataDir = "C:\\Users\\Dell\\Desktop\\tuneshift\\data"; // Absolute path to data directory
+        File dataDirFile = new File(dataDir);
+        if (!dataDirFile.exists()) {
+            dataDirFile.mkdirs();
+        }
+        String feedbackFilePath = dataDir + File.separator + "feedback.txt";
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(feedbackFilePath, true))) {
+            writer.write(feedback.toFileString());
+            writer.newLine();
+            System.out.println("Feedback saved: " + feedback.toFileString());
         } catch (IOException e) {
-            session.setAttribute("errorMessage", "Failed to save feedback. Please try again.");
-            response.sendRedirect(request.getContextPath() + "/pages/profile.jsp");
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/pages/profile.jsp?section=feedback&error=Failed to save feedback");
             return;
         }
 
-        session.setAttribute("successMessage", "Thank you for your feedback!");
-        response.sendRedirect(request.getContextPath() + "/pages/profile.jsp");
+        response.sendRedirect(request.getContextPath() + "/pages/profile.jsp?section=feedback&success=Feedback submitted successfully");
     }
 } 

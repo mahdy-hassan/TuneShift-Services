@@ -827,12 +827,36 @@
     </style>
 </head>
 <body>
-<%
+<%! String initialSectionId = "carsSection"; %> <%-- Default section --%>
+<% 
     User user = (User) session.getAttribute("user");
     if (user == null) {
         response.sendRedirect(request.getContextPath() + "/pages/login.jsp");
         return;
     }
+
+    // Check for a 'section' parameter in the URL and set the initial section
+    String requestedSection = request.getParameter("section");
+    if (requestedSection != null && !requestedSection.trim().isEmpty()) {
+        // Basic validation to ensure it's a valid section ID
+        switch (requestedSection) {
+            case "carsSection":
+            case "servicesSection":
+            case "bookingsSection":
+            case "historySection":
+            case "feedbackSection":
+                initialSectionId = requestedSection;
+                break;
+            default:
+                // If an invalid section is requested, default to carsSection
+                initialSectionId = "carsSection";
+        }
+    }
+
+    // Read success/error messages from URL parameters (optional, if not using session)
+    // String successMessage = request.getParameter("success");
+    // String errorMessage = request.getParameter("error");
+    // If you switch to URL parameters, you might remove the session reading below
 
     // Check for completed services notifications and get user bookings
     List<String> notifications = new ArrayList<>();
@@ -1408,6 +1432,47 @@
         // Scroll to top of the section
         document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
+    // Call showSection on page load based on initialSectionId
+    document.addEventListener('DOMContentLoaded', function() {
+        const initialSection = '<%= initialSectionId %>';
+        showSection(initialSection);
+
+        // Optional: Read messages from URL parameters and display them
+        const urlParams = new URLSearchParams(window.location.search);
+        const successMsg = urlParams.get('success');
+        const errorMsg = urlParams.get('error');
+
+        const containerDiv = document.querySelector('.container'); // Assuming messages should be in a container
+
+        if (successMsg) {
+            // Create and display success message div (similar to your existing logic)
+            const successDiv = document.createElement('div');
+            successDiv.classList.add('success-message');
+            successDiv.innerHTML = successMsg; // Be cautious with user-provided content if not escaping
+            if (containerDiv) { // Append to container if it exists
+                 containerDiv.insertBefore(successDiv, containerDiv.firstChild); // Insert at the beginning
+            } else { // Fallback if container is not found
+                 document.body.insertBefore(successDiv, document.body.firstChild);
+            }
+             // Clean up URL to remove message parameter after displaying
+             history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/([?&])success=[^&]*(&|$)/, '$1').replace(/[?&]$/, ''));
+        }
+
+        if (errorMsg) {
+            // Create and display error message div
+            const errorDiv = document.createElement('div');
+            errorDiv.classList.add('error-message');
+            errorDiv.innerHTML = errorMsg; // Be cautious with user-provided content if not escaping
+             if (containerDiv) { // Append to container if it exists
+                 containerDiv.insertBefore(errorDiv, containerDiv.firstChild); // Insert at the beginning
+            } else { // Fallback if container is not found
+                 document.body.insertBefore(errorDiv, document.body.firstChild);
+            }
+             // Clean up URL to remove message parameter after displaying
+             history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/([?&])error=[^&]*(&|$)/, '$1').replace(/[?&]$/, ''));
+        }
+    });
 
     function sortServiceHistory() {
         const sortOrder = document.getElementById('sortOrder').value;
